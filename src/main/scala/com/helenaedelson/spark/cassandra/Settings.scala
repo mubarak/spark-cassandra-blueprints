@@ -60,7 +60,7 @@ final class Settings(conf: Option[Config] = None) extends Logging {
     "spark.cleaner.ttl") getOrElse 3600
 
   val CassandraHosts = withFallback[String](Try(cassandra.getString("connection.host")),
-      "spark.cassandra.connection.host") getOrElse InetAddress.getLocalHost.getHostAddress
+      "spark.cassandra.connection.host") getOrElse "127.0.0.1"//InetAddress.getLocalHost.getHostAddress
 
   logInfo(s"Starting up with spark master '$SparkMaster' cassandra hosts '$CassandraHosts'")
 

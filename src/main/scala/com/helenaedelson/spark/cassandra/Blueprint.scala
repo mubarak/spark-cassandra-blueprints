@@ -15,10 +15,10 @@
  */
 
 package com.helenaedelson.spark.cassandra
-
+ 
 import org.apache.spark.{SparkContext, SparkConf}
 import org.apache.spark.streaming.StreamingContext
-import com.datastax.spark.connector.embedded.{Assertions, EmbeddedCassandra}
+import com.datastax.spark.connector.embedded.Assertions
 import com.datastax.spark.connector.util.Logging
 
 /**
@@ -34,10 +34,10 @@ trait Blueprint extends App with Assertions with Logging {
   import settings._
 
   /** Configures Spark. */
-  lazy val conf = new SparkConf(true)
-    .set("spark.cassandra.connection.host", EmbeddedCassandra.cassandraHost.getHostAddress)// CassandraHosts EmbeddedCassandra.cassandraHost.getHostAddress
-    .set("spark.cleaner.ttl", "3600")//SparkCleanerTtl.toString
-    .setMaster("local[*]")//SparkMaster
+  lazy val conf = new SparkConf()
+    .set("spark.cassandra.connection.host", CassandraHosts)
+    .set("spark.cleaner.ttl", SparkCleanerTtl.toString)
+    .setMaster(SparkMaster)
     .setAppName(getClass.getSimpleName)
 
   lazy val sc = new SparkContext(conf)
