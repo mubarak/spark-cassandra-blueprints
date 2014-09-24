@@ -32,7 +32,11 @@ object Settings extends Build {
     licenses := Seq(("Apache License, Version 2.0", url("http://www.apache.org/licenses/LICENSE-2.0")))
   )
 
+  override lazy val settings = super.settings ++ buildSettings ++ Seq(shellPrompt := ShellPrompt.prompt)
+
   lazy val defaultSettings = Seq(
+    autoCompilerPlugins := true,
+    libraryDependencies <+= scalaVersion { v => compilerPlugin("org.scala-lang.plugins" % "continuations" % v) },
     scalacOptions in (Compile, doc) ++= Seq("-implicits","-doc-root-content", "rootdoc.txt"),
     scalacOptions ++= Seq("-encoding", "UTF-8", s"-target:jvm-${Versions.JDK}", "-deprecation", "-feature", "-language:_", "-unchecked", "-Xlint"),
     javacOptions in Compile ++= Seq("-encoding", "UTF-8", "-source", Versions.JDK, "-target", Versions.JDK, "-Xlint:unchecked", "-Xlint:deprecation"),
@@ -41,7 +45,23 @@ object Settings extends Build {
     parallelExecution in Global := false
   )
 
-  override lazy val settings = super.settings ++ buildSettings ++ Seq(shellPrompt := ShellPrompt.prompt)
+  val tests = inConfig(Test)(Defaults.testTasks) ++ inConfig(IntegrationTest)(Defaults.itSettings)
+
+  val testOptionSettings = Seq(
+    Tests.Argument(TestFrameworks.ScalaTest, "-oDF")
+  )
+
+  lazy val testSettings = tests ++ Seq(
+    parallelExecution in Test := false,
+    parallelExecution in IntegrationTest := false,
+    testOptions in Test ++= testOptionSettings,
+    testOptions in IntegrationTest ++= testOptionSettings,
+    fork in Test := true,
+    fork in IntegrationTest := true,
+    (compile in IntegrationTest) <<= (compile in Test, compile in IntegrationTest) map { (_, c) => c },
+    managedClasspath in IntegrationTest <<= Classpaths.concat(managedClasspath in IntegrationTest, exportedProducts in Test)
+  )
+
 }
 
 /**
