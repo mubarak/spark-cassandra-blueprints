@@ -24,7 +24,7 @@ import com.datastax.spark.connector.cql.CassandraConnector
 import com.datastax.spark.connector.streaming.TypedStreamingActor
 import com.datastax.spark.connector.util.Logging
 import com.datastax.spark.connector.embedded._
-import com.helenaedelson.spark.cassandra.basic.StreamingEvent._
+import com.datastax.spark.connector.streaming.StreamingEvent._
 import com.helenaedelson.spark.cassandra.{Settings, StreamingBlueprint}
 
 /**
@@ -38,13 +38,14 @@ import com.helenaedelson.spark.cassandra.{Settings, StreamingBlueprint}
  */
 object AkkaStreamingBlueprint extends StreamingBlueprint {
 
-  val TableName = "data/words"
+  val keyspaceName = "akka_blueprints"
+  val tableName = "wordcount"
 
   /** Creates the keyspace and table in Cassandra. */
   CassandraConnector(conf).withSessionDo { session =>
-    session.execute(s"CREATE KEYSPACE IF NOT EXISTS streaming_test WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1 }")
-    session.execute(s"CREATE TABLE IF NOT EXISTS streaming_test.$TableName (word TEXT PRIMARY KEY, count COUNTER)")
-    session.execute(s"TRUNCATE streaming_test.$TableName")
+    session.execute(s"CREATE KEYSPACE IF NOT EXISTS $keyspaceName WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1 }")
+    session.execute(s"CREATE TABLE IF NOT EXISTS $keyspaceName.$tableName (word TEXT PRIMARY KEY, count COUNTER)")
+    session.execute(s"TRUNCATE $keyspaceName.$tableName")
   }
 
   /** Creates the Spark Streaming context. */
@@ -55,10 +56,10 @@ object AkkaStreamingBlueprint extends StreamingBlueprint {
   val system = ActorSystem("DemoApp")
 
   import akka.japi.Util.immutableSeq
-  val data = immutableSeq(system.settings.config.getStringList("streaming-demo.data")).toSet
+  val data = immutable.Seq("words", "may", "count")
 
   /** Creates the root supervisor of this simple Akka `ActorSystem` node that you might deploy across a cluster. */
-  val guardian = system.actorOf(Props(new NodeGuardian(ssc, settings, TableName, data)), "node-guardian")
+  val guardian = system.actorOf(Props(new NodeGuardian(ssc, settings, keyspaceName, tableName, data)), "node-guardian")
 
 }
 
@@ -111,11 +112,13 @@ object AkkaStreamingBlueprint extends StreamingBlueprint {
  *
  * @param settings the [[Settings]] from config
  *
+ * @param keyspaceName the Cassandra keyspace name
+ *
  * @param tableName the Cassandra table name to use
  *
  * @param data the demo data for a simple WordCount
  */
-class NodeGuardian(ssc: StreamingContext, settings: Settings, tableName: String, data: immutable.Set[String])
+class NodeGuardian(ssc: StreamingContext, settings: Settings, keyspaceName: String, tableName: String, data: immutable.Seq[String])
   extends Actor with Assertions with Logging {
 
   import akka.util.Timeout
@@ -124,6 +127,9 @@ class NodeGuardian(ssc: StreamingContext, settings: Settings, tableName: String,
   import com.datastax.spark.connector._
   import context.dispatcher
 
+  /** Implicits for the DStream's 'saveToCassandra' functions. */
+  import com.datastax.spark.connector.streaming._
+
   implicit val timeout = Timeout(5.seconds)
 
   private val actorName = "stream"
@@ -131,25 +137,20 @@ class NodeGuardian(ssc: StreamingContext, settings: Settings, tableName: String,
   /** Captures Spark's Akka ActorSystem. */
   private val sas = SparkEnv.get.actorSystem
 
-  sas.eventStream.subscribe(self, classOf[StreamingEvent.ReceiverStarted])
-
-  private val reporter = context.actorOf(Props(new Reporter(ssc, "streaming_test", tableName, data)), "reporter")
+  sas.eventStream.subscribe(self, classOf[ReceiverStarted])
 
   /** Creates an Akka Actor input stream. */
   private val stream = ssc.actorStream[String](Props[Streamer], actorName, StorageLevel.MEMORY_AND_DISK)
 
-  /* Defines the work to do in the stream. Placing the import here to explicitly show
-     that this is where the implicits are used for the DStream's 'saveToCassandra' functions: */
-  import com.datastax.spark.connector.streaming._
-
+  /* Defines the work to do in the stream. */
   stream.flatMap(_.split("\\s+"))
     .map(x => (x, 1))
     .reduceByKey(_ + _)
-    .saveToCassandra("streaming_test", "data/words", SomeColumns("word", "count"), 1)
+    .saveToCassandra(keyspaceName, tableName, SomeColumns("word", "count"), 1)
 
   /** Once the stream and sender actors are created, the spark stream's compute configured, the `StreamingContext` is started. */
   ssc.start()
-  log.info(s"Streaming context started.")
+  logInfo(s"Streaming context started.")
 
   def receive: Actor.Receive = {
     /** Initializes direct point-to-point messaging of event-driven data from [[Sender]] to [[Streamer]].
@@ -157,29 +158,27 @@ class NodeGuardian(ssc: StreamingContext, settings: Settings, tableName: String,
       * work is `done` (again, just for a simple demo that does work and stops once expectations are met).
       * Then we inject the [[Sender]] actor with the [[Streamer]] actor ref so it can easily send data to the stream. */
     case ReceiverStarted(receiver) =>
-      log.info(s"Spark Streaming actor located: $receiver")
+      logInfo(s"Spark Streaming actor located: $receiver")
       context.watch(receiver)
       context.actorOf(Props(new Sender(data.toArray, receiver)))
 
-    /** Akka DeathWatch notification that `ref`, the [[Streamer]] actor we are watching, has terminated itself.
-      * We message the [[Reporter]], which triggers its scheduled validation task. */
+    /** Akka DeathWatch notification that `ref`, the [[Streamer]] actor we are watching, has terminated itself. */
     case Terminated(ref) =>
-      log.info(s"Spark Streaming actor work completed and shutdown. Starting validation.")
-      reporter ! Report
-
-    /** NodeGuardian actor receives confirmation from the [[Reporter]] of a successful validation.
-      * We trigger a system shutdown of the Akka node, which calls `shutdown()`. */
-    case Completed       => shutdown()
+      logInfo(s"Spark Streaming actor work completed and shutdown. Starting validation.")
+      shutdown()
   }
 
   /** Stops the ActorSystem, the Spark `StreamingContext` and its underlying Spark system. */
   def shutdown(): Unit = {
-    log.info(s"Assertions successful, shutting down.")
+    import BlueprintEvents._
+    val rdd = ssc.cassandraTable[WordCount](keyspaceName, tableName).select("word", "count")
+    rdd.collect foreach (row => logInfo(s"$row"))
+
     context.system.eventStream.unsubscribe(self)
-    log.info(s"Stopping the demo app actor system and '$ssc'")
+    logInfo(s"Stopping the demo app actor system and '$ssc'")
     context.system.shutdown()
-    awaitCond(context.system.isTerminated, 2.seconds)
-    ssc.stop(stopSparkContext = true, stopGracefully = true)
+    ssc.stop(stopSparkContext = true, stopGracefully = false)
+    ssc.awaitTermination()
   }
 
 }
@@ -251,51 +250,3 @@ trait CounterActor extends Actor  with Logging {
   }
 }
 
-object StreamingEvent {
-  sealed trait Status extends Serializable
-  case class ReceiverStarted(ref: ActorRef) extends Status
-  case class Pushed(data: AnyRef) extends Status
-  case object Completed extends Status
-  case object Report extends Status
-  case class WordCount(word: String, count: Int)
-}
-
-/** When called upon, the Reporter starts a task which checks at regular intervals whether
-  * the produced amount of data has all been written to Cassandra from the stream. This allows
-  * the demo to stop on its own once this assertion is true. It will stop the task and ping
-  * the `NodeGuardian`, its supervisor, of the `Completed` state.
-  */
-class Reporter(ssc: StreamingContext, keyspaceName: String, tableName: String, data: immutable.Set[String]) extends CounterActor  {
-
-  import akka.actor.Cancellable
-  import com.datastax.spark.connector.streaming._
-  import context.dispatcher
-
-  private var task: Option[Cancellable] = None
-
-  def receive: Actor.Receive = {
-    case Report => report()
-  }
-
-  def done: Actor.Receive = {
-    case Completed => complete()
-  }
-
-  def report(): Unit = {
-    task = Some(context.system.scheduler.schedule(Duration.Zero, 1.millis) {
-      val rdd = ssc.cassandraTable[WordCount](keyspaceName, tableName).select("word", "count")
-      if (rdd.collect.nonEmpty && rdd.map(_.count).reduce(_ + _) == scale * 2) {
-        assert(rdd.collect.length == data.size)
-        log.info(s"Saved data to Cassandra:")
-        rdd.collect foreach println
-        context.become(done)
-        self ! Completed
-      }
-    })
-  }
-
-  def complete(): Unit = {
-    task map (_.cancel())
-    context.parent ! Completed
-  }
-}

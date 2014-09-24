@@ -3,55 +3,69 @@ package com.helenaedelson.spark.cassandra.basic
 import scala.concurrent.duration._
 import org.apache.spark.SparkContext._
 import com.datastax.spark.connector.cql.CassandraConnector
-import com.datastax.spark.connector.embedded._
+import com.datastax.spark.connector._
 import com.helenaedelson.spark.cassandra.Blueprint
-import com.helenaedelson.spark.cassandra.basic.StreamingEvent.WordCount
 
-/** A simple spark word count, sorted alphabetically, written to console. */
+/** Two simple spark word count apps, sorted alphabetically.
+  *
+  * [[SparkWordCount]] writes to console.
+  *
+  * [[SparkCassandraWordCount]] writes to cassandra.
+  *
+  * Same amount of code, `setup` added for keyspace/table setup, `verify` to prove stored.
+  * In the wild, neither are relevant or needed. */
+object SparkWordCount extends AbstractWordCount {
+
+  sc.textFile("./src/main/resources/data/words")
+    .flatMap(_.split("\\s+"))
+    .map(word => (clean(word), 1))
+    .reduceByKey(_ + _)
+    .sortByKey()
+    .collect.foreach(row => logInfo(s"$row"))
+}
+
+object SparkCassandraWordCount extends AbstractWordCount {
+  setup()
+
+  sc.textFile("./src/main/resources/data/words")
+    .flatMap(_.split("\\s+"))
+    .map(word => (clean(word), 1))
+    .reduceByKey(_ + _)
+    .sortByKey()
+    .saveToCassandra(keyspaceName, tableName)
+
+  verify()
+}
+
 trait AbstractWordCount extends Blueprint {
+  import BlueprintEvents._
 
-  val rootpath = settings.ResourceDataDirectory
+  val keyspaceName = "basic_blueprints"
+  val tableName = "wordcount"
+
+  /** Pre-setup local cassandra with the keyspace and table. */
+  def setup(): Unit =
+    CassandraConnector(conf).withSessionDo { session =>
+      session.execute(s"CREATE KEYSPACE IF NOT EXISTS $keyspaceName WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1 }")
+      session.execute(s"CREATE TABLE IF NOT EXISTS $keyspaceName.$tableName (word TEXT PRIMARY KEY, count COUNTER)")
+      session.execute(s"TRUNCATE $keyspaceName.$tableName")
+    }
 
   def clean(word: String): String =
     word.toLowerCase.replace(".", "").replace(",", "")
 
-}
-
-/** A simple spark word count, sorted alphabetically, written to console. */
-object SparkWordCount extends AbstractWordCount {
-
-  sc.textFile(s"$rootpath/words")
-    .flatMap(_.split("\\s+"))
-    .map(word => (clean(word), 1))
-    .reduceByKey(_ + _)
-    .sortByKey()
-    .collect.foreach(row => log.info(s"$row"))
-}
-
-/** A simple spark cassandra word count, sorted alphabetically, written to cassandra. */
-object SparkCassandraWordCount extends AbstractWordCount {
-
-  /** Pre-setup local cassandra with the keyspace and table. */
-  CassandraConnector(conf).withSessionDo { session =>
-    session.execute("CREATE KEYSPACE IF NOT EXISTS blueprintsv1 WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1 }")
-    session.execute("DROP TABLE IF EXISTS blueprintsv1.wordcount")
-    session.execute("CREATE TABLE IF NOT EXISTS blueprintsv1.wordcount (word TEXT PRIMARY KEY, count COUNTER)")
-    session.execute("TRUNCATE blueprintsv1.wordcount")
-  }
-
-  import com.datastax.spark.connector._
-
-  sc.textFile(s"$rootpath/words")
-    .flatMap(_.split("\\s+"))
-    .map(word => (clean(word), 1))
-    .reduceByKey(_ + _)
-    .sortByKey()
-    //.collect().foreach(row => log.info(s"$row"))
-    .saveToCassandra("blueprintsv1", "wordcount", SomeColumns("word", "count"))
-
   /** Read table and output its contents. */
-  val rdd = sc.cassandraTable[WordCount]("blueprintsv1", "wordcount").select("word", "count")
-  awaitCond(rdd.collect.length > 20, 60.seconds)
-  rdd.collect.foreach(c => log.info(s"$c"))
+  def verify(): Unit = {
+    val rdd = sc.cassandraTable[WordCount](keyspaceName, tableName).select("word", "count")
+    awaitCond(rdd.collect.length > 20, 60.seconds)
+    rdd.collect.foreach(c => logInfo(s"$c"))
+
+  }
+}
+
+object BlueprintEvents {
+  sealed trait BlueprintEvent extends Serializable
+  case class Publish(to: String, data: Map[String,Int])
+  case class WordCount(word: String, count: Int)
 
 }

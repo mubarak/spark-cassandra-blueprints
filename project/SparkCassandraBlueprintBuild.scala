@@ -25,7 +25,7 @@ object SparkCassandraBlueprintBuild extends Build {
     id = "spark-cassandra-blueprints",
     base = file("."),
     settings = defaultSettings ++ Seq(libraryDependencies ++= Dependencies.blueprints)
-  ) configs (IntegrationTest)
+  )
 
 }
 
@@ -34,48 +34,23 @@ object Dependencies {
   object Compile {
     import Versions._
 
-    val akkaActor         = "com.typesafe.akka"       %% "akka-actor"                % Akka           % "provided"                 // ApacheV2
-    val akkaSlf4j         = "com.typesafe.akka"       %% "akka-slf4j"                % Akka           % "provided"                 // ApacheV2
-    val cassandraThrift   = "org.apache.cassandra"    % "cassandra-thrift"           % Cassandra
-    val cassandraClient   = "org.apache.cassandra"    % "cassandra-clientutil"       % Cassandra
-    val cassandraDriver   = "com.datastax.cassandra"  % "cassandra-driver-core"      % CassandraDriver              withSources()  // ApacheV2
-    val config            = "com.typesafe"            % "config"                     % Config         % "provided"                 // ApacheV2
-    val logback           = "ch.qos.logback"          % "logback-classic"            % Logback                                     // EPL 1.0 / LGPL 2.1
-    val slf4jApi          = "org.slf4j"               % "slf4j-api"                  % Slf4j          % "provided"                 // MIT
-    val sparkCassandra    = "com.datastax.spark"      %% "spark-cassandra-connector" % SparkCassandra
-    val sparkCassandraEmb = "com.datastax.spark"      %% "spark-cassandra-connector-embedded" % SparkCassandra
-    val sparkCore         = "org.apache.spark"        %% "spark-core"                % Spark      exclude("com.google.guava", "guava") // ApacheV2
-    val sparkStreaming    = "org.apache.spark"        %% "spark-streaming"           % Spark      exclude("com.google.guava", "guava") // ApacheV2
-    val sparkStreamingKafka   = "org.apache.spark"     %% "spark-streaming-kafka"    % Spark      exclude("com.google.guava", "guava") // ApacheV2
-    val sparkStreamingTwitter = "org.apache.spark"     %% "spark-streaming-twitter"  % Spark      exclude("com.google.guava", "guava") // ApacheV2
-    val sparkStreamingZmq     = "org.apache.spark"     %% "spark-streaming-zeromq"   % Spark      exclude("com.google.guava", "guava") // ApacheV2
-    val cassandraServer       = "org.apache.cassandra" % "cassandra-all"             % Cassandra  exclude("com.google.guava", "guava") // ApacheV2
-    val jopt                  =  "net.sf.jopt-simple"  % "jopt-simple"               % JOpt       // For kafka command line
-    val sparkRepl             = "org.apache.spark"     %% "spark-repl"               % Spark exclude("com.google.guava", "guava") exclude("org.apache.spark", "spark-core_2.10") exclude("org.apache.spark", "spark-bagel_2.10") exclude("org.apache.spark", "spark-mllib_2.10") exclude("org.scala-lang", "scala-compiler")          // ApacheV2
+    val akkaActor         = "com.typesafe.akka"   %% "akka-actor"                         % Akka            // ApacheV2
+    val akkaSlf4j         = "com.typesafe.akka"   %% "akka-slf4j"                         % Akka            // ApacheV2
+    val kafka             = "org.apache.kafka"    %% "kafka"                              % Kafka           // ApacheV2
+    val slf4jApi          = "org.slf4j"           % "slf4j-api"                           % Slf4j           // MIT
+    val sparkCassandra    = "com.datastax.spark"  %% "spark-cassandra-connector"          % SparkCassandra  // ApacheV2
+    val sparkCassandraEmb = "com.datastax.spark"  %% "spark-cassandra-connector-embedded" % SparkCassandra  // ApacheV2
 
-    object Test {
-      val akkaTestKit     = "com.typesafe.akka"       %% "akka-testkit"         % Akka           % "test,it"                 // ApacheV2
-      val commonsIO       = "commons-io"              % "commons-io"            % CommonsIO      % "test,it"                 // ApacheV2
-      val scalatest       = "org.scalatest"           %% "scalatest"            % ScalaTest      % "test,it"                 // ApacheV2
-    }
   }
 
   import Compile._
 
-  val logging = Seq(slf4jApi)
-
-  val test = Seq(Test.akkaTestKit, Test.commonsIO, Test.scalatest)
-
-  val akka = Seq(akkaActor, akkaSlf4j)
+  val akka = Seq(akkaActor)
 
   val connector = Seq(sparkCassandra, sparkCassandraEmb)
 
-  val cassandra = Seq(cassandraThrift, cassandraClient, cassandraDriver)
+  val logging = Seq(akkaSlf4j, slf4jApi)
 
-  val spark = Seq(sparkCore, sparkStreaming)
-
-  val sparkExtStreaming = Seq(sparkStreamingKafka, sparkStreamingTwitter, sparkStreamingZmq)
-
-  val blueprints = test ++ logging ++ akka ++ cassandra ++ connector ++ spark ++ sparkExtStreaming ++ Seq(config)
+  val blueprints = logging ++ akka ++ connector ++ Seq(kafka)
 
 }

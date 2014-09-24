@@ -28,12 +28,17 @@ import com.datastax.spark.connector.embedded._
 import com.helenaedelson.spark.cassandra._
 
 object KafkaStreamingBlueprint extends StreamingBlueprint {
+  /** Implicits for the DStream's 'saveToCassandra' functions. */
+  import com.datastax.spark.connector.streaming._
+
+  val keyspaceName = "kafka_blueprints"
+  val tableName = "wordcount"
 
   /** Creates the keyspace and table in Cassandra. */
   CassandraConnector(conf).withSessionDo { session =>
-    session.execute(s"CREATE KEYSPACE IF NOT EXISTS streaming_test WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1 }")
-    session.execute(s"CREATE TABLE IF NOT EXISTS streaming_test.key_value (key VARCHAR PRIMARY KEY, value INT)")
-    session.execute(s"TRUNCATE streaming_test.key_value")
+    session.execute(s"CREATE KEYSPACE IF NOT EXISTS $keyspaceName WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1 }")
+    session.execute(s"CREATE TABLE IF NOT EXISTS $keyspaceName.$tableName (key VARCHAR PRIMARY KEY, value INT)")
+    session.execute(s"TRUNCATE $keyspaceName.$tableName")
   }
 
   private val topic = "topic1"
@@ -54,26 +59,18 @@ object KafkaStreamingBlueprint extends StreamingBlueprint {
   val stream = KafkaUtils.createStream[String, String, StringDecoder, StringDecoder](
     ssc, kafka.kafkaParams, Map(topic -> 1), StorageLevel.MEMORY_ONLY)
 
-  /* Defines the work to do in the stream. Placing the import here to explicitly show
-   that this is where the implicits are used for the DStream's 'saveToCassandra' functions: */
-  import com.datastax.spark.connector.streaming._
-
+  /* Defines the work to do in the stream. */
   stream.map { case (_, v) => v }
     .map(x => (x, 1))
     .reduceByKey(_ + _)
-    .saveToCassandra("streaming_test", "key_value", SomeColumns("key", "value"), 1)
+    .saveToCassandra(keyspaceName, tableName, SomeColumns("key", "value"), 1)
 
   ssc.start()
 
-  val rdd = ssc.cassandraTable("streaming_test", "key_value").select("key", "value")
-
-
+  val rdd = ssc.cassandraTable(keyspaceName, tableName).select("key", "value")
   awaitCond(rdd.collect.size == sent.size, 5.seconds)
+  rdd.collect foreach (row => logInfo(s"$row"))
 
-  val rows = rdd.collect
-  sent.forall { rows.contains(_)}
-
-  log.info(s"Assertions successful, shutting down.")
-  ssc.stop(stopSparkContext = true, stopGracefully = false)
-
+  logInfo(s"Assertions successful, shutting down.")
+  ssc.stop(stopSparkContext = true, stopGracefully = false) 
 }

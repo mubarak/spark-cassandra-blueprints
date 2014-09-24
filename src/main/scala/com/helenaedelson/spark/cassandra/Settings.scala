@@ -18,13 +18,11 @@ package com.helenaedelson.spark.cassandra
 
 import java.net.InetAddress
 
-import com.datastax.spark.connector.embedded.EmbeddedCassandra
-import com.datastax.spark.connector.util.Logging
-
 import scala.util.Try
+import com.typesafe.config.{Config, ConfigFactory}
+import com.datastax.spark.connector.util.Logging
 import com.datastax.driver.core.ConsistencyLevel
 import com.datastax.spark.connector.cql.{NoAuthConf, PasswordAuthConf, AuthConf}
-import com.typesafe.config.{Config, ConfigFactory}
 
 /** Initializes Akka, Cassandra and Spark settings.
   *
@@ -55,8 +53,6 @@ final class Settings(conf: Option[Config] = None) extends Logging {
   protected val cassandra = rootConfig.getConfig("cassandra")
   protected val akka = rootConfig.getConfig("akka")
 
-  val ResourceDataDirectory =  blueprints.getString("data.resource.dir")
-
   val SparkMaster = withFallback[String](Try(spark.getString("master")),
     "spark.master") getOrElse "local[*]"
 
@@ -66,7 +62,7 @@ final class Settings(conf: Option[Config] = None) extends Logging {
   val CassandraHosts = withFallback[String](Try(cassandra.getString("connection.host")),
       "spark.cassandra.connection.host") getOrElse InetAddress.getLocalHost.getHostAddress
 
-  log.info(s"Starting up with spark master '$SparkMaster' cassandra hosts '$CassandraHosts'")
+  logInfo(s"Starting up with spark master '$SparkMaster' cassandra hosts '$CassandraHosts'")
 
   val CassandraAuthUsername: Option[String] = Try(cassandra.getString("auth.username")).toOption
     .orElse(sys.props.get("spark.cassandra.auth.username"))

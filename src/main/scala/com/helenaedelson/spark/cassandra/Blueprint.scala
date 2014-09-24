@@ -18,7 +18,6 @@ package com.helenaedelson.spark.cassandra
 
 import org.apache.spark.{SparkContext, SparkConf}
 import org.apache.spark.streaming.StreamingContext
-import com.datastax.spark.connector.cql.CassandraConnector
 import com.datastax.spark.connector.embedded.{Assertions, EmbeddedCassandra}
 import com.datastax.spark.connector.util.Logging
 
@@ -32,7 +31,7 @@ import com.datastax.spark.connector.util.Logging
 trait Blueprint extends App with Assertions with Logging {
 
   val settings: Settings = new Settings
-  //import settings._
+  import settings._
 
   /** Configures Spark. */
   lazy val conf = new SparkConf(true)

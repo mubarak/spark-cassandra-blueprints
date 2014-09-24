@@ -35,12 +35,12 @@ object BasicBlueprint extends Blueprint {
   /** Read table test.kv and print its contents.
     * Retrieving data from Cassandra returns a (Cassandra) RDD. */
   val rdd = sc.cassandraTable("test", "key_value").select("key", "value")
-  rdd.collect.foreach(row => log.info(s"$row"))
+  rdd.collect.foreach(row => logInfo(s"$row"))
 
   /** Write two rows to the test.kv table. */
   val col = sc.parallelize(Seq((4, "fourth row"), (5, "fifth row")))
   col.saveToCassandra("test", "key_value", SomeColumns("key", "value"))
-  col.collect().foreach(row => log.info(s"$row"))
+  col.collect().foreach(row => logInfo(s"$row"))
 
   // Assert the two new rows were stored in test.kv table:
   awaitCond(col.collect().length == 2)
