@@ -47,7 +47,9 @@ In Production you would use the `NetworkTopologyStrategy` and a mimimum replicat
 
 
 
-## Optional For Later 
+## Fun Reading / Resources
+
+More being added...
 
 * [CQL](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/cqlsh.html)
 * [Cassandra: Getting started](http://wiki.apache.org/cassandra/GettingStarted) 
