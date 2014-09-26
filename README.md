@@ -8,6 +8,8 @@ Some of these will be in the DataBricks github samples as well.
 
 ## Environment Pre-Requisites
 
+If you already use Scala skip the SBT step. Similarly, if you already can spin up Cassandra locally, skip that step. 
+
 ### SBT: Scala Build Tool
 We will be building and running with SBT
 
