@@ -14,7 +14,7 @@ import com.helenaedelson.spark.cassandra.Blueprint
   *
   * Same amount of code, `setup` added for keyspace/table setup, `verify` to prove stored.
   * In the wild, neither are relevant or needed. */
-object SparkWordCount extends AbstractWordCount {
+object SparkWordCount extends WordCountBlueprint {
 
   sc.textFile("./src/main/resources/data/words")
     .flatMap(_.split("\\s+"))
@@ -24,7 +24,7 @@ object SparkWordCount extends AbstractWordCount {
     .collect.foreach(row => logInfo(s"$row"))
 }
 
-object SparkCassandraWordCount extends AbstractWordCount {
+object SparkCassandraWordCount extends WordCountBlueprint {
   setup()
 
   sc.textFile("./src/main/resources/data/words")
@@ -37,11 +37,11 @@ object SparkCassandraWordCount extends AbstractWordCount {
   verify()
 }
 
-trait AbstractWordCount extends Blueprint {
+trait WordCountBlueprint extends Blueprint {
   import BlueprintEvents._
 
-  val keyspaceName = "basic_blueprints"
-  val tableName = "wordcount"
+  protected val keyspaceName = "basic_blueprints"
+  protected val tableName = "wordcount"
 
   /** Pre-setup local cassandra with the keyspace and table. */
   def setup(): Unit =

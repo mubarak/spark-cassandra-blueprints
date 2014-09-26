@@ -132,15 +132,13 @@ class NodeGuardian(ssc: StreamingContext, settings: Settings, keyspaceName: Stri
 
   implicit val timeout = Timeout(5.seconds)
 
-  private val actorName = "stream"
-
   /** Captures Spark's Akka ActorSystem. */
   private val sas = SparkEnv.get.actorSystem
 
   sas.eventStream.subscribe(self, classOf[ReceiverStarted])
 
   /** Creates an Akka Actor input stream. */
-  private val stream = ssc.actorStream[String](Props[Streamer], actorName, StorageLevel.MEMORY_AND_DISK)
+  private val stream = ssc.actorStream[String](Props[Streamer], "stream", StorageLevel.MEMORY_AND_DISK)
 
   /* Defines the work to do in the stream. */
   stream.flatMap(_.split("\\s+"))

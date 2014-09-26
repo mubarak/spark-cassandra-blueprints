@@ -15,7 +15,7 @@
  */
 
 package com.helenaedelson.spark.cassandra
- 
+
 import org.apache.spark.{SparkContext, SparkConf}
 import org.apache.spark.streaming.StreamingContext
 import com.datastax.spark.connector.embedded.Assertions
