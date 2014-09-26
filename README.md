@@ -28,12 +28,9 @@ All you should have to do is download and open the tar.
 
 ### Testing Your Install
 
-Start Cassandra 
-
-```sudo ./apache-cassandra-2.1.0/bin/cassandra```
+Start Cassandra ```sudo ./apache-cassandra-2.1.0/bin/cassandra```
 
 Open the CQL shell ```./apache-cassandra-2.1.0/bin/cqlsh```
-
 
 ```CREATE KEYSPACE IF NOT EXISTS test WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1 }"```
 ```CREATE TABLE IF NOT EXISTS test.mytable (key TEXT PRIMARY KEY, value INT)"```
