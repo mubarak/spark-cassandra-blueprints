@@ -2,7 +2,9 @@
 
 Templates for getting started or doing quick prototypes, building Scala applications with Spark and Cassandra.
 
-Currently just basic samples. More documentation coming soon as well as larger application samples addressing particular use cases.
+Currently the repo just has the basic samples. Full application samples addressing particular use cases are coming over the next few days.
+
+Some of these will be in the DataBricks github samples as well.
 
 ## Environment Pre-Requisites
 
