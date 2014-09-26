@@ -32,22 +32,19 @@ Start Cassandra
 
 ```sudo ./apache-cassandra-2.1.0/bin/cassandra```
 
-Open the CQL shell 
+Open the CQL shell ```./apache-cassandra-2.1.0/bin/cqlsh```
 
-```./apache-cassandra-2.1.0/bin/cqlsh```
-
-Create A Keyspace
 
 ```CREATE KEYSPACE IF NOT EXISTS test WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1 }"```
+```CREATE TABLE IF NOT EXISTS test.mytable (key TEXT PRIMARY KEY, value INT)"```
+
+If all went well, you're G2G!
 
 
 In Production you would use the `NetworkTopologyStrategy` and a mimimum replication factor of 3.
 [NetworkTopologyStrategy](http://www.datastax.com/documentation/cassandra/2.0/cassandra/architecture/architectureDataDistributeReplication_c.html)
 
-Create A Table
-```CREATE TABLE IF NOT EXISTS test.mytable (key TEXT PRIMARY KEY, value INT)"```
 
-If all went well, you're G2G!
 
 ## Optional For Later 
 
