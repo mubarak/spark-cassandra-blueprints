@@ -9,14 +9,24 @@ Currently just basic samples. More documentation coming soon as well as larger a
 ### SBT: Scala Build Tool
 We will be building and running with SBT
 
-* [**Download SBT**](http://www.scala-sbt.org/download.html) 
-* [**SBT Setup**](http://www.scala-sbt.org/0.13/tutorial/Manual-Installation.html) 
-* [**SBT Docs**](http://www.scala-sbt.org/0.13/docs/index.html)
+* [Download SBT](http://www.scala-sbt.org/download.html) 
+* [SBT Setup](http://www.scala-sbt.org/0.13/tutorial/Manual-Installation.html) 
+* [SBT Docs](http://www.scala-sbt.org/0.13/docs/index.html)
 
 ### Apache Cassandra
-We will be building and running with SBT
+All you should have to do is download and open the tar.
 
-Optional, more for your own reference:
+* [Download Apache Cassandra 2.1.0](http://cassandra.apache.org/download/)
+* [Cassandra: Getting started](http://wiki.apache.org/cassandra/GettingStarted) 
+
+
+Optional for later / your own reference:
 Easy tool for creating a local Cassandra cluster
  
-* [**CCM**](http://www.datastax.com/dev/blog/ccm-a-development-tool-for-creating-local-cassandra-clusters) 
+* [CCM](http://www.datastax.com/dev/blog/ccm-a-development-tool-for-creating-local-cassandra-clusters) 
+
+### Testing Your Install
+
+Start Cassandra
+
+
