@@ -23,12 +23,11 @@ import scala.language.postfixOps
 object Settings extends Build {
 
   lazy val buildSettings = Seq(
-    name := "Spark Cassandra Connector Project Blueprints",
+    name := "Blueprints",
     normalizedName := "spark-cassandra-blueprints",
     organization := "com.helenaedelson",
     organizationHomepage := Some(url("http://www.github.com/helena/spark-cassandra-blueprints")),
     version in ThisBuild := "1.0.0-SNAPSHOT",
-    scalaVersion := Versions.Scala,
     homepage := Some(url("https://github.com/datastax/helena/spark-cassandra-blueprints")),
     licenses := Seq(("Apache License, Version 2.0", url("http://www.apache.org/licenses/LICENSE-2.0")))
   )
