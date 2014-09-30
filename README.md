@@ -46,7 +46,14 @@ In Production you would use the `NetworkTopologyStrategy` and a mimimum replicat
 [NetworkTopologyStrategy](http://www.datastax.com/documentation/cassandra/2.0/cassandra/architecture/architectureDataDistributeReplication_c.html)
 
 
+# Fu
+To use the connector, the only dependency required is:
 
+    "com.datastax.spark"  %% "spark-cassandra-connector" 
+
+and possibly slf4j. The others in [SparkCassandraBlueprintBuild.scala](http://github.com/helena/spark-cassandra-blueprints/blob/master/project/SparkCassandraBlueprintBuild.scala) 
+are there for other non Spark (core and streaming) and Cassandra code.
+  
 ## Fun Reading / Resources
 
 More being added...

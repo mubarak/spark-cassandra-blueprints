@@ -21,36 +21,118 @@ import sbt.Keys._
 object SparkCassandraBlueprintBuild extends Build {
   import Settings._
 
-  lazy val blueprints = Project(
-    id = "spark-cassandra-blueprints",
+  lazy val root = Project(
+    id = "root",
     base = file("."),
+    settings = parentSettings,
+    aggregate = Seq(blueprints, basic, api, timeseries)
+  )
+
+  /** Blueprint core setup and Basic samples. */
+  lazy val blueprints = Project(
+    id = "blueprints",
+    base = file("./spark-cassandra-blueprints"),
     settings = defaultSettings ++ Seq(libraryDependencies ++= Dependencies.blueprints)
   )
 
+  /** Blueprint core setup and Basic samples. */
+  lazy val basic = Project(
+    id = "basic",
+    base = file("./spark-cassandra-basic"),
+    dependencies = Seq(blueprints),
+    settings = defaultSettings ++ Seq(libraryDependencies ++= Dependencies.basic)
+  )
+
+  lazy val api = Project(
+    id = "api",
+    base = file("./spark-cassandra-api"),
+    dependencies = Seq(blueprints),
+    settings = defaultSettings ++ withContainer ++ Seq(libraryDependencies ++= Dependencies.api)
+  ) configs (IntegrationTest) configs(config("container"))
+
+  /** Timeseries sample. */
+  lazy val timeseries = Project(
+    id = "timeseries",
+    base = file("./spark-cassandra-timeseries"),
+    dependencies = Seq(blueprints, api),
+    settings = defaultSettings ++ withContainer ++ Seq(libraryDependencies ++= Dependencies.timeseries)
+  ) configs (IntegrationTest) configs(config("container"))
+
+  /** More sample apps coming. */
 }
 
+/** To use the connector, the only dependency required is:
+  * "com.datastax.spark"  %% "spark-cassandra-connector" and possibly slf4j.
+  * The others are here for other non-spark core and streaming code.
+  */
 object Dependencies {
+  import Versions._
 
   object Compile {
-    import Versions._
-
     val akkaActor         = "com.typesafe.akka"   %% "akka-actor"                         % Akka            // ApacheV2
+    val akkaCluster       = "com.typesafe.akka"   %% "akka-cluster"                       % Akka            // ApacheV2
+    val akkaRemote        = "com.typesafe.akka"   %% "akka-remote"                        % Akka            // ApacheV2
     val akkaSlf4j         = "com.typesafe.akka"   %% "akka-slf4j"                         % Akka            // ApacheV2
+    val jodaTime          = "joda-time"           % "joda-time"                           % JodaTime        // ApacheV2
+    val jodaConvert       = "org.joda"            % "joda-convert"                        % JodaConvert     // ApacheV2
+    val json4sCore        = "org.json4s"          %% "json4s-core"                        % Json4s          // ApacheV2
+    val json4sJackson     = "org.json4s"          %% "json4s-jackson"                     % Json4s          // ApacheV2
+    val json4sNative      = "org.json4s"          %% "json4s-native"                      % Json4s          // ApacheV2
     val kafka             = "org.apache.kafka"    %% "kafka"                              % Kafka           // ApacheV2
+    val scalazContrib     = "org.typelevel"       %% "scalaz-contrib-210"                 % ScalazContrib   // MIT
+    val scalazContribVal  = "org.typelevel"       %% "scalaz-contrib-validation"          % ScalazContrib   // MIT
+    val scalazContribUndo ="org.typelevel"        %% "scalaz-contrib-undo"                % ScalazContrib   // MIT
+    val scalazNst         = "org.typelevel"       %% "scalaz-nscala-time"                 % ScalazContrib   // MIT
+    val scalazSpire       = "org.typelevel"       %% "scalaz-spire"                       % ScalazContrib   // MIT
+    val scalazStream      = "org.scalaz.stream"   %% "scalaz-stream"                      % ScalazStream    // MIT
     val slf4jApi          = "org.slf4j"           % "slf4j-api"                           % Slf4j           // MIT
+    val sparkML           = "org.apache.spark"    %% "spark-mllib"                        % Spark           // ApacheV2
     val sparkCassandra    = "com.datastax.spark"  %% "spark-cassandra-connector"          % SparkCassandra  // ApacheV2
     val sparkCassandraEmb = "com.datastax.spark"  %% "spark-cassandra-connector-embedded" % SparkCassandra  // ApacheV2
 
   }
 
+  object Runtime {
+    val jettyWebapp       = "org.eclipse.jetty"   % "jetty-webapp"                        % JettyWebapp  % "container"
+    val servletApi        = "javax.servlet"       % "javax.servlet-api"                   % JavaxServlet % "container"
+    val scalatra          = "org.scalatra"        %% "scalatra"                           % Scalatra
+    val scalatraJson      = "org.scalatra"        %% "scalatra-json"                      % Scalatra
+  }
+
+  /* TBD if i'll keep these or not, it's just for running the API without deploying to tomcat
+  - ease of use during Presentations, so we can just run in IDE or SBT command line. */
+  object Test {
+    val akkaTestKit     = "com.typesafe.akka"     %% "akka-testkit"                       % Akka        % "test,it"
+    val scalatest       = "org.scalatest"         %% "scalatest"                          % "2.2.1"     % "test,it"
+    val scalatraTest    = "org.scalatra"          %% "scalatra-scalatest"                 % "2.2.2"     % "test,it"
+  }
+
   import Compile._
 
-  val akka = Seq(akkaActor)
+  val akka = Seq(akkaActor, akkaCluster, akkaRemote)
 
   val connector = Seq(sparkCassandra, sparkCassandraEmb)
 
+  val json = Seq(json4sCore, json4sJackson, json4sNative)
+
   val logging = Seq(akkaSlf4j, slf4jApi)
 
-  val blueprints = logging ++ akka ++ connector ++ Seq(kafka)
+  val rest = Seq(Runtime.jettyWebapp, Runtime.scalatra, Runtime.scalatraJson, Runtime.servletApi)
+
+  val scalaz = Seq(scalazContrib, scalazContribVal, scalazContribUndo, scalazNst, scalazSpire, scalazStream)
+
+  val time = Seq(jodaConvert, jodaTime)
+
+  val test = Seq(Test.akkaTestKit, Test.scalatest, Test.scalatraTest)
+
+  /** Module deps */
+  val blueprints = connector// ++ Seq(akkaActor, slf4jApi)
+
+  val basic = connector ++ Seq(akkaActor, kafka, slf4jApi)
+
+  val api = json ++ logging ++ rest ++ scalaz ++ time ++ test ++ Seq(akkaActor, sparkCassandra)
+
+  val timeseries = akka ++ json ++ logging ++ connector ++
+    rest ++ scalaz ++ time ++ test ++ Seq(sparkML)
 
 }

@@ -13,26 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.helenaedelson.weather
 
-object Versions {
+import com.helenaedelson.blueprints.Settings
+import com.typesafe.config.Config
 
-  val Akka           = "2.3.6"
-  val JDK            = "1.7"
-  val JodaConvert    = "1.7"
-  val JodaTime       = "2.4"
-  val Json4s         = "3.2.10"
-  val JavaxServlet   = "3.1.0"
-  val JettyWebapp    = "9.2.3.v20140905"
-  val Kafka          = "0.8.0"
-  val Lzf            = "0.8.4"
-  val MetricsJson    = "3.0.2"
-  val Scala          = "2.10.4"
-  val Scalatra       = "2.3.0.M1"
-  val Scalaz         = "7.1.0"
-  val ScalazContrib  = "0.1.5"
-  val ScalazStream   = "0.1"
-  val Slf4j          = "1.7.7"
-  val Spark          = "1.1.0"
-  val SparkCassandra = "1.1.0-alpha1"
+final class WeatherSettings(conf: Option[Config] = None) extends Settings(conf) {
 
+  protected val timeseries = blueprints.getConfig("timeseries")
+
+  val Keyspace = timeseries.getString("cassandra.keyspace")
+
+  val KafkaTopic = timeseries.getString("kafka.topic")
+
+  val RawDataFile = timeseries.getString("raw.data.file")
 }

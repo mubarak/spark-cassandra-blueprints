@@ -16,6 +16,7 @@
 
 import sbt._
 import sbt.Keys._
+import com.earldouglas.xsbtwebplugin.WebPlugin
 
 import scala.language.postfixOps
 
@@ -34,6 +35,11 @@ object Settings extends Build {
 
   override lazy val settings = super.settings ++ buildSettings ++ Seq(shellPrompt := ShellPrompt.prompt)
 
+  val parentSettings = buildSettings ++ Seq(
+    publishArtifact := false,
+    publish := {}
+  )
+
   lazy val defaultSettings = Seq(
     autoCompilerPlugins := true,
     libraryDependencies <+= scalaVersion { v => compilerPlugin("org.scala-lang.plugins" % "continuations" % v) },
@@ -48,7 +54,8 @@ object Settings extends Build {
   val tests = inConfig(Test)(Defaults.testTasks) ++ inConfig(IntegrationTest)(Defaults.itSettings)
 
   val testOptionSettings = Seq(
-    Tests.Argument(TestFrameworks.ScalaTest, "-oDF")
+    Tests.Argument(TestFrameworks.ScalaTest, "-oDF"),
+    Tests.Argument(TestFrameworks.JUnit, "-oDF", "-v", "-a")
   )
 
   lazy val testSettings = tests ++ Seq(
@@ -61,6 +68,8 @@ object Settings extends Build {
     (compile in IntegrationTest) <<= (compile in Test, compile in IntegrationTest) map { (_, c) => c },
     managedClasspath in IntegrationTest <<= Classpaths.concat(managedClasspath in IntegrationTest, exportedProducts in Test)
   )
+
+  lazy val withContainer = WebPlugin.webSettings ++ testSettings
 
 }
 
