@@ -8,6 +8,7 @@ Start your local Cassandra node. At the command line, cd to the /data directory.
     Connected to Test Cluster at 127.0.0.1:9042. 
     [cqlsh 5.0.1 | Cassandra 2.1.0 | CQL spec 3.2.0 | Native protocol v3]
     Use HELP for help.
+    cqlsh> create keyspace if not exists isd_weather_data  with replication = {'class': 'SimpleStrategy', 'replication_factor': 1 };
     cqlsh> source 'create-timeseries.cql';
     cqlsh> source 'load-timeseries.cql';
     cqlsh> describe keyspace isd_weather_data;
