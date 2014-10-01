@@ -50,7 +50,7 @@ object SparkCassandraBlueprintBuild extends Build {
     settings = defaultSettings ++ withContainer ++ Seq(libraryDependencies ++= Dependencies.api)
   ) configs (IntegrationTest) configs(config("container"))
 
-  /** Timeseries sample. */
+  /** Timeseries apps: WeatherCenter, Campaign. */
   lazy val timeseries = Project(
     id = "timeseries",
     base = file("./spark-cassandra-timeseries"),
@@ -58,7 +58,7 @@ object SparkCassandraBlueprintBuild extends Build {
     settings = defaultSettings ++ withContainer ++ Seq(libraryDependencies ++= Dependencies.timeseries)
   ) configs (IntegrationTest) configs(config("container"))
 
-  /** More sample apps coming. */
+  /** More sample apps coming, using ML and Spark SQL. */
 }
 
 /** To use the connector, the only dependency required is:
@@ -69,7 +69,7 @@ object Dependencies {
   import Versions._
 
   object Compile {
-    val akkaActor         = "com.typesafe.akka"   %% "akka-actor"                         % Akka            // ApacheV2
+    val akkaActor         = "com.typesafe.akka"   %% "akka-actor"                         % Akka    force()        // ApacheV2
     val akkaCluster       = "com.typesafe.akka"   %% "akka-cluster"                       % Akka            // ApacheV2
     val akkaRemote        = "com.typesafe.akka"   %% "akka-remote"                        % Akka            // ApacheV2
     val akkaSlf4j         = "com.typesafe.akka"   %% "akka-slf4j"                         % Akka            // ApacheV2
@@ -126,13 +126,13 @@ object Dependencies {
   val test = Seq(Test.akkaTestKit, Test.scalatest, Test.scalatraTest)
 
   /** Module deps */
-  val blueprints = connector// ++ Seq(akkaActor, slf4jApi)
+  val blueprints = connector
 
   val basic = connector ++ Seq(akkaActor, kafka, slf4jApi)
 
-  val api = json ++ logging ++ rest ++ scalaz ++ time ++ test ++ Seq(akkaActor, sparkCassandra)
+  val api = json ++ rest ++ scalaz ++ time ++ test ++ Seq(akkaActor, sparkCassandra)
 
-  val timeseries = akka ++ json ++ logging ++ connector ++
-    rest ++ scalaz ++ time ++ test ++ Seq(sparkML)
+  val timeseries = akka ++ json ++ connector ++ logging ++
+    rest ++ scalaz ++ time ++ test ++ Seq(kafka, sparkML)
 
 }

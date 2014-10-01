@@ -39,12 +39,12 @@ class BlueprintsServlet extends ScalatraServlet with FutureSupport with NativeJs
 
  protected def blueprintId(request: HttpServletRequest): Option[String] =
     for {
-      validated <- UserId(request)
+      validated <- UID(request)
       id <- validated.toOption
     } yield id.value
 
-  protected def userIdOrHalt(request: HttpServletRequest, errorBody: => String => Any = identity): UserId = {
-    UserId(request) getOrElse halt(status = 400, body = errorBody("No ID")) valueOr (fail => halt(status = 400, body = errorBody(fail)))
+  protected def userIdOrHalt(request: HttpServletRequest, errorBody: => String => Any = identity): UID = {
+    UID(request) getOrElse halt(status = 400, body = errorBody("No ID")) valueOr (fail => halt(status = 400, body = errorBody(fail)))
   }
 
   def perPageParam(params: Params): Int = params.get("perPage").map(_.toInt) getOrElse 30

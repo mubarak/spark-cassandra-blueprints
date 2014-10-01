@@ -58,7 +58,7 @@ object Weather {
    * @param skyCondition Total cloud cover (coded, see format documentation)
    * @param skyConditionText Non-coded sky conditions
    * @param oneHourPrecip One-hour accumulated liquid precipitation (millimeters)
-   * @param sizeHourPrecip Six-hour accumulated liquid precipitation (millimeters)
+   * @param sixHourPrecip Six-hour accumulated liquid precipitation (millimeters)
    */
   case class RawWeatherData(
     weatherStation: String,
@@ -66,7 +66,7 @@ object Weather {
     month: Int,
     day: Int,
     hour: Int,
-    temperature: Int,
+    temperature: Float,
     dewpoint: Float,
     pressure: Float,
     windDirection: Int,
@@ -74,7 +74,29 @@ object Weather {
     skyCondition: Int,
     skyConditionText: String,
     oneHourPrecip: Float,
-    sizeHourPrecip: Float) extends WeatherModel
+    sixHourPrecip: Float) extends WeatherModel
+
+  object RawWeatherData {
+    /** Tech debt - don't do it this way ;) */
+    def apply(array: Array[String]): RawWeatherData = {
+      // 010010:99999,2014,06,11,14,3.3,1.5,1021.2,110,3.0,0,0.0,0.0
+      RawWeatherData(
+        weatherStation = array(0),
+        year = array(1).toInt,
+        month = array(2).toInt,
+        day = array(3).toInt,
+        hour = array(4).toInt,
+        temperature = array(5).toFloat,
+        dewpoint = array(6).toFloat,
+        pressure = array(7).toFloat,
+        windDirection = array(8).toInt,
+        windSpeed = array(9).toFloat,
+        skyCondition = array(10).toInt,
+        skyConditionText = array(11),
+        oneHourPrecip = array(11).toFloat,
+        sixHourPrecip = Option(array(12).toFloat).getOrElse(0))
+    }
+  }
 
   case class HiLowForecast() extends WeatherModel
   /**
@@ -90,5 +112,10 @@ object Weather {
   case object GetRawWeatherData extends DataRequest
   case object GetSkyConditionLookup extends Forecast
   /* Will be building out the date range handling this/next week. For now, keeping it simple. */
-  case class GetHiLow(uid: UserId, days: Int = 3) extends Aggregate
+  case class GetHiLow(uid: UID) extends DataRequest
+
+  /**
+   * TODO: what type of data params do we want in order to request this?
+   */
+  case class ComputeHiLow() extends Aggregate
 }

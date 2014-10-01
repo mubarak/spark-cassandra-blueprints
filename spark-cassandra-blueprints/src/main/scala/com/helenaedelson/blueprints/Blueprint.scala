@@ -21,8 +21,9 @@ import com.datastax.spark.connector.util.Logging
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.{SparkConf, SparkContext}
 
+
 /**
- * Currently requires a node to be running. 
+ * Requires a Cassandra node to be running.
  */
 trait Blueprint {
 
@@ -51,7 +52,7 @@ trait Blueprint {
 
 trait BlueprintApp extends App with Blueprint with Assertions with Logging
 
-trait StreamingBlueprint extends App with Blueprint with Assertions {
+trait StreamingBlueprint extends App with Blueprint {
 
   def ssc: StreamingContext
 
@@ -59,7 +60,8 @@ trait StreamingBlueprint extends App with Blueprint with Assertions {
 
 object BlueprintEvents {
   sealed trait BlueprintEvent extends Serializable
-  case class Publish(to: String, data: Map[String,Int])
+  case object Shutdown extends BlueprintEvent
+  case object TaskCompleted extends BlueprintEvent
   case class WordCount(word: String, count: Int)
-
+  case class StreamingWordCount(time: Long, word: String, count: Int)
 }

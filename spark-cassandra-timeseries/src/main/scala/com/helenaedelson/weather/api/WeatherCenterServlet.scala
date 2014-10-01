@@ -53,9 +53,9 @@ class WeatherDataActorApi(system: ActorSystem, guardian: ActorRef) {
 
   /** Returns a summary of the weather for the next 3 days.
     * This includes high and low temperatures, a string text forecast and the conditions.
-    * @param userId the user id
+    * @param uid the user id
     */
-  def hilow(userId: UserId): FutureT[HiLowForecast] =
-    (guardian ? userId).mapTo[HiLowForecast].eitherT
+  def hilow(uid: UID): FutureT[HiLowForecast] =
+    (guardian ? uid).mapTo[HiLowForecast].eitherT
 
 }

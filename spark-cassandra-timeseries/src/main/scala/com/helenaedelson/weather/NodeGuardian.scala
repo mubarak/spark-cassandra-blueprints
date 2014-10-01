@@ -1,78 +1,98 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.helenaedelson.weather
 
 import scala.concurrent.duration._
 import akka.actor._
+import akka.pattern.gracefulStop
+import akka.actor.SupervisorStrategy._
 import akka.util.Timeout
+import org.apache.spark.streaming.{Seconds, StreamingContext}
 import kafka.serializer.StringDecoder
 import org.apache.spark.storage.StorageLevel
-import org.apache.spark.streaming.StreamingContext
-import org.apache.spark.streaming.StreamingContext.toPairDStreamFunctions
 import org.apache.spark.streaming.kafka.KafkaUtils
-import com.datastax.spark.connector.embedded.EmbeddedKafka
-import com.datastax.spark.connector.streaming._ 
+import com.datastax.spark.connector.embedded.{Assertions, EmbeddedKafka}
+import com.datastax.spark.connector.streaming._
+import com.helenaedelson.blueprints.BlueprintEvents._
 
-class NodeGuardian(ssc: StreamingContext, kafka: EmbeddedKafka, settings: WeatherSettings) extends Actor {
+/**
+ * NOTE: if [[NodeGuardian]] is ever put on an Akka router, multiple instances of the stream will
+ * exist on the node. Might want to call 'union' on the streams in that case.
+ */
+class NodeGuardian(ssc: StreamingContext, kafka: EmbeddedKafka, settings: WeatherSettings)
+  extends Actor with Assertions with ActorLogging {
   import Weather._
   import settings._
 
-  implicit val timeout = Timeout(5.seconds)
+  override val supervisorStrategy =
+    OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
+      case _: AssertionError           => Resume
+      case _: NullPointerException     => Restart
+      case _: IllegalArgumentException => Stop
+      case _: Exception                => Escalate
+    }
 
-  context.actorOf(Props(new KafkaRawPublisher(ssc, settings, "raw_weather_data")), "raw-publisher")
+  implicit val timeout = Timeout(3.seconds)
 
-  /** Creates an input stream that pulls messages from a Kafka Broker.
-    * Accepts the streaming context, kafka connection properties, topic map and storage level.
-    * Connects to the ZK cluster. */
-  val stream = KafkaUtils.createStream[String, String, StringDecoder, StringDecoder](
-    ssc, kafka.kafkaParams, Map(KafkaTopic -> 1), StorageLevel.MEMORY_ONLY)
+  // 1. read the 2014 data file and publish the raw data to Kafka for streaming in later.
+  context.actorOf(Props(new RawDataActor(kafka.kafkaConfig, ssc, settings)), "kafka-raw-publisher")
 
-  /* Defines the work to do in the stream. Retrieves data */
-  stream.map { case (_, v) => v }
-    .map(x => (x, 1))
-    .reduceByKey(_ + _)
-    .saveToCassandra(Keyspace, "raw_weather_data")
-
-  ssc.start()
+  var highLow: Option[ActorRef] = None
 
   override def postStop(): Unit = {
 
   }
 
   def receive: Actor.Receive = {
-    case GetWeatherStation => raw(sender)
-    case GetRawWeatherData =>
+    case TaskCompleted         => startStreaming()
+    case e: GetHiLow           => highLow(sender)
+    case GetWeatherStation     =>
+    case GetRawWeatherData     =>
     case GetSkyConditionLookup =>
+    case PoisonPill            => gracefulShutdown()
   }
 
-  def raw(actor: ActorRef): Unit = {
-    val rdd = ssc.cassandraTable[RawWeatherData](Keyspace, "raw_weather_data")
-    rdd.toLocalIterator // TODO iterate and page
+  // 2. save raw to cassandra
+  def startStreaming(): Unit = {
+
+    val rawInputStream = KafkaUtils.createStream[String, String, StringDecoder, StringDecoder](
+      ssc, kafka.kafkaParams, Map(KafkaTopicRaw -> 1), StorageLevel.MEMORY_ONLY)
+
+    rawInputStream.map { case (_,d) => d.split(",")}
+      .map (RawWeatherData(_))
+      .saveToCassandra(CassandraKeyspace, CassandraTableRaw) // can also create a new table and specify columns: SomeColumns("key", "value")
+
+    ssc.start()
+
+    highLow = Some(context.actorOf(Props(new StreamingHighLowActor(ssc, settings)), "high-low"))
+    // for now:
+    highLow map ( _ ! ComputeHiLow())
   }
-}
 
-/** Stores the raw data in Cassandra for multi-purpose data analysis.
-  *
-  * This just batches one data file for the demo. But you could do something like this
-  * to set up a monitor on a directory, so that when new files arrive, Spark streams
-  * them in. New files are read as text files with 'textFileStream' (using key as LongWritable,
-  * value as Text and input format as TextInputFormat)
-  * {{{
-  *   ssc.textFileStream("dirname")
-     .reduceByWindow(_ + _, Seconds(30), Seconds(1))
-  * }}}
-  *
-  * Should make this a supervisor which partitions the workload to routees vs doing
-  * all the work itself. But normally this would be done by other strategies anyway.
-  */
-class KafkaRawPublisher(ssc: StreamingContext, settings: WeatherSettings, tableName: String) extends Actor with ActorLogging {
-  import settings._
-  import com.datastax.spark.connector._
+  def highLow(requester: ActorRef): Unit =
+    highLow map (_ ! ComputeHiLow())
 
-  // TODO finish this actor..
-  ssc.sparkContext.textFile(RawDataFile)
-    .flatMap(line => line.split(","))
-    .saveToCassandra(Keyspace, tableName)
-
-  def receive: Actor.Receive = {
-    case _ =>
+  /** Fill out the where clause and what needs to be passed in to request one. */
+  def weatherStation(requester: ActorRef): Unit = {
+     //Future(ssc.sc.cassandraTable[WeatherStation](CassandraKeyspace, "weather_station").where(...)) pipeTo requester
   }
+
+  def gracefulShutdown(): Unit = {
+    context.children foreach (c => awaitCond(gracefulStop(c, timeout.duration).isCompleted, timeout.duration))
+    log.info(s"Graceful stop completed.")
+  }
+
 }

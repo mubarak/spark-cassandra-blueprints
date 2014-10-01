@@ -13,22 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.helenaedelson.spark.cassandra.basic
+package com.helenaedelson.spark.cassandra.streaming
 
-import scala.concurrent.duration._
-import kafka.serializer.StringDecoder
-import org.apache.spark.SparkEnv
-import org.apache.spark.storage.StorageLevel
-import org.apache.spark.streaming.kafka.KafkaUtils
-import org.apache.spark.streaming.{Seconds, StreamingContext}
-import org.apache.spark.streaming.StreamingContext.toPairDStreamFunctions
-import com.datastax.spark.connector.cql.CassandraConnector
 import com.datastax.spark.connector.SomeColumns
+import com.datastax.spark.connector.cql.CassandraConnector
 import com.datastax.spark.connector.embedded._
 import com.datastax.spark.connector.util.Logging
 import com.helenaedelson.blueprints.StreamingBlueprint
+import kafka.serializer.StringDecoder
+import org.apache.spark.SparkEnv
+import org.apache.spark.storage.StorageLevel
+import org.apache.spark.streaming.StreamingContext.toPairDStreamFunctions
+import org.apache.spark.streaming.kafka.KafkaUtils
+import org.apache.spark.streaming.{Seconds, StreamingContext}
 
-object KafkaStreamingBlueprint extends StreamingBlueprint with Logging {
+import scala.concurrent.duration._
+
+object KafkaStreamingBlueprint extends StreamingBlueprint with Assertions with Logging {
   /** Implicits for the DStream's 'saveToCassandra' functions. */
   import com.datastax.spark.connector.streaming._
 

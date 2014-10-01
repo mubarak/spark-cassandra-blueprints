@@ -6,7 +6,7 @@ More can be read about these weather sets here: http://www.ncdc.noaa.gov/oa/clim
 DROP KEYSPACE IF EXISTS isd_weather_data;
 CREATE KEYSPACE isd_weather_data WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
 
-USE isd_weather_data;
+use isd_weather_data;
 
 /*
 Weather stations that correspond with collected raw weather data.
@@ -16,6 +16,7 @@ CREATE TABLE weather_station (
     id text PRIMARY KEY,  // Composite of Air Force Datsav3 station number and NCDC WBAN number
     name text,            // Name of reporting station
     country_code text,    // 2 letter ISO Country ID
+    state_code text,      // 2 letter state code for US stations
     call_sign text,       // International station call sign
     lat float,            // Latitude in decimal degrees
     long float,           // Longitude in decimal degrees
@@ -24,6 +25,7 @@ CREATE TABLE weather_station (
 
 /*
 Raw weather readings from a single station, hourly.
+sky_condition_text text, // Non-coded sky conditions
 */
 
 CREATE TABLE raw_weather_data (
@@ -43,6 +45,7 @@ CREATE TABLE raw_weather_data (
    six_hour_precip float,   // Six-hour accumulated liquid precipitation (millimeters)
    PRIMARY KEY ((weather_station), year, month, day, hour)
 ) WITH CLUSTERING ORDER BY (year DESC, month DESC, day DESC, hour DESC);
+
 
 /*
 Quick access lookup table for sky_condition. Useful for potential analytics.

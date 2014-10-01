@@ -3,13 +3,13 @@ Declares the keyspace to use:
 */
 USE isd_weather_data;
 
-COPY weather_station (id, name, country_code, call_sign, lat, long, elevation) FROM 'weather_stations.csv';
+COPY weather_station (id, name, country_code, state_code, call_sign, lat, long, elevation) FROM 'weather_stations.csv';
 
 /*
 Better to load this much data with one of the utility loading programs. But for simplicity of demos:
-*/
 COPY raw_weather_data (weather_station, year, month, day, hour, temperature, dewpoint, pressure, wind_direction, wind_speed, sky_condition, one_hour_precip, six_hour_precip)
 FROM '2014.csv';
+*/
 
 INSERT INTO  sky_condition_lookup (code, condition) VALUES (0, 'None, SKC or CLR');
 INSERT INTO  sky_condition_lookup (code, condition) VALUES (1, 'One okta - 1/10 or less but not zero');

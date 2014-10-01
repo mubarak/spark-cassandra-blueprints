@@ -13,20 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.helenaedelson.spark.cassandra.basic
-
-import com.helenaedelson.blueprints.{BlueprintEvents, Settings, StreamingBlueprint}
+package com.helenaedelson.spark.cassandra.streaming
 
 import scala.collection.immutable
 import scala.concurrent.duration._
 import akka.actor._
-import org.apache.spark.streaming.{Milliseconds, StreamingContext}
 import org.apache.spark.SparkEnv
+import org.apache.spark.streaming.{Milliseconds, StreamingContext}
 import com.datastax.spark.connector.cql.CassandraConnector
-import com.datastax.spark.connector.streaming.TypedStreamingActor
-import com.datastax.spark.connector.util.Logging
 import com.datastax.spark.connector.embedded._
 import com.datastax.spark.connector.streaming.StreamingEvent._
+import com.datastax.spark.connector.streaming.TypedStreamingActor
+import com.datastax.spark.connector.util.Logging
+import com.helenaedelson.blueprints.{Settings, StreamingBlueprint}
 
 /**
  * This demo can run against a single node, local or remote.
@@ -122,10 +121,9 @@ class NodeGuardian(ssc: StreamingContext, settings: Settings, keyspaceName: Stri
   extends Actor with Assertions with ActorLogging {
 
   import akka.util.Timeout
+  import com.datastax.spark.connector._
   import org.apache.spark.storage.StorageLevel
   import org.apache.spark.streaming.StreamingContext.toPairDStreamFunctions
-  import com.datastax.spark.connector._
-  import context.dispatcher
 
   /** Implicits for the DStream's 'saveToCassandra' functions. */
   import com.datastax.spark.connector.streaming._
@@ -168,7 +166,7 @@ class NodeGuardian(ssc: StreamingContext, settings: Settings, keyspaceName: Stri
 
   /** Stops the ActorSystem, the Spark `StreamingContext` and its underlying Spark system. */
   def shutdown(): Unit = {
-    import BlueprintEvents._
+    import com.helenaedelson.blueprints.BlueprintEvents._
     val rdd = ssc.cassandraTable[WordCount](keyspaceName, tableName).select("word", "count")
     rdd.collect foreach (row => log.info(s"$row"))
 
