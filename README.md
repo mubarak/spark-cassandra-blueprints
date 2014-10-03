@@ -1,13 +1,7 @@
 # Spark Cassandra Blueprints
-
-Templates for getting started or doing quick prototypes, building Scala applications with Spark and Cassandra.
-
-Currently the repo just has the basic samples. Full application samples addressing particular use cases are coming over the next few days.
-
-Some of these will be in the DataBricks github samples as well.
+Templates for getting started or doing quick prototypes, building Scala applications with Spark and Cassandra. 
 
 ## Environment Pre-Requisites
-
 If you already use Scala skip the SBT step. Similarly, if you already can spin up Cassandra locally, skip that step. 
 
 ### SBT: Scala Build Tool
@@ -25,7 +19,6 @@ We will be building and running with SBT
 [SBT Docs](http://www.scala-sbt.org/0.13/docs/index.html)
 
 ### Apache Cassandra
-
 All you should have to do is download and open the tar.
 
 [Download Apache Cassandra 2.1.0](http://cassandra.apache.org/download/)
@@ -39,16 +32,14 @@ Many ways to do this. A simple method is
     export CASSANDRA_HOME=/Users/helena/cassandra  
 
     PATH=$CASSANDRA_HOME/bin:$JAVA_HOME/bin:$SBT_HOME/bin:$SCALA_HOME/bin$PATH
-
  
 ### Testing Your Install
+Start Cassandra 
 
-Start Cassandra ```sudo ./apache-cassandra-2.1.0/bin/cassandra```
+    sudo ./apache-cassandra-2.1.0/bin/cassandra
 
-Open the CQL shell ```./apache-cassandra-2.1.0/bin/cqlsh```
-
-```CREATE KEYSPACE IF NOT EXISTS test WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1 };```
-```CREATE TABLE IF NOT EXISTS test.mytable (key TEXT PRIMARY KEY, value INT);```
+Follow the instructions to set up the timeseries WeatherCenter schema for Cassandra
+on [/spark-cassandra-timeseries/README.md](/spark-cassandra-timeseries/README.md)
 
 If all went well, you're G2G!
 
