@@ -25,9 +25,8 @@ All you should have to do is download and open the tar.
 [DataStax Academy - Free video courses on Cassandra!](https://academy.datastax.com/courses)
 
 ### Add CASSANDRA_HOME
-Many ways to do this. A simple method is 
-* Open (or create if you don't have one) ~/.bash_profile
-* Add a Cassandra env to your path $CASSANDRA_HOME/bin
+Many ways to do this. A simple method is to open (or create if you don't have one) ~/.bash_profile
+and add a Cassandra env to your path $CASSANDRA_HOME/bin
 
     export CASSANDRA_HOME=/Users/helena/cassandra  
 
