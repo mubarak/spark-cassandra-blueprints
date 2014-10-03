@@ -27,6 +27,7 @@ import kafka.serializer.{StringDecoder, StringEncoder}
 import com.datastax.spark.connector.embedded.Assertions
 import com.helenaedelson.blueprints.BlueprintEvents._
 import com.helenaedelson.blueprints.weather.Weather._
+import com.helenaedelson.blueprints.weather.api.WeatherApi
 
 trait WeatherActor extends Actor with ActorLogging
 
@@ -70,6 +71,7 @@ class RawDataActor(val kafkaConfig: KafkaConfig, ssc: StreamingContext, settings
 class StreamingHighLowActor(ssc: StreamingContext, settings: WeatherSettings) extends WeatherActor with Assertions {
 
   import com.datastax.spark.connector.streaming._
+  import WeatherApi._
   import settings._
 
   def receive : Actor.Receive = {

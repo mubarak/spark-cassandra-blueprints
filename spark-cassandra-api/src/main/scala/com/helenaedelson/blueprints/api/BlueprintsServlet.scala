@@ -37,19 +37,15 @@ class BlueprintsServlet extends ScalatraServlet with FutureSupport with NativeJs
   protected implicit def executor: ExecutionContext = ExecutionContext.global
   override def jsonFormats: Formats = apiFormats
 
- protected def blueprintId(request: HttpServletRequest): Option[String] =
+  protected def blueprintId(request: HttpServletRequest): Option[String] =
     for {
       validated <- UID(request)
       id <- validated.toOption
     } yield id.value
 
-  protected def userIdOrHalt(request: HttpServletRequest, errorBody: => String => Any = identity): UID = {
-    UID(request) getOrElse halt(status = 400, body = errorBody("No ID")) valueOr (fail => halt(status = 400, body = errorBody(fail)))
-  }
-
   def perPageParam(params: Params): Int = params.get("perPage").map(_.toInt) getOrElse 30
 
-  // Suppresses list of routes. Only show necessary.
+  // Only show necessary.
   notFound {
     status = 404
   }

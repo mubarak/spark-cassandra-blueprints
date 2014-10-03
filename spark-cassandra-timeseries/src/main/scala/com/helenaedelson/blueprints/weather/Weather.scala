@@ -15,8 +15,6 @@
  */
 package com.helenaedelson.blueprints.weather
 
-import com.helenaedelson.blueprints.api.ApiData._
-
 object Weather {
   /** Base marker trait. */
   sealed trait WeatherDataMarker extends Serializable
@@ -79,7 +77,6 @@ object Weather {
   object RawWeatherData {
     /** Tech debt - don't do it this way ;) */
     def apply(array: Array[String]): RawWeatherData = {
-      // 010010:99999,2014,06,11,14,3.3,1.5,1021.2,110,3.0,0,0.0,0.0
       RawWeatherData(
         weatherStation = array(0),
         year = array(1).toInt,
@@ -97,25 +94,4 @@ object Weather {
         sixHourPrecip = Option(array(12).toFloat).getOrElse(0))
     }
   }
-
-  case class HiLowForecast() extends WeatherModel
-  /**
-   * Quick access lookup table for sky_condition. Useful for potential analytics.
-   * See http://en.wikipedia.org/wiki/Okta
-   */
-  case class SkyConditionLookup(code: Int, condition: String) extends WeatherModel
-
-  sealed trait Forecast extends DataRequest
-  sealed trait Aggregate extends Forecast
-
-  case object GetWeatherStation extends DataRequest
-  case object GetRawWeatherData extends DataRequest
-  case object GetSkyConditionLookup extends Forecast
-  /* Will be building out the date range handling this/next week. For now, keeping it simple. */
-  case class GetHiLow(uid: UID) extends DataRequest
-
-  /**
-   * TODO: what type of data params do we want in order to request this?
-   */
-  case class ComputeHiLow() extends Aggregate
 }

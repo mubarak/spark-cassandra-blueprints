@@ -26,7 +26,8 @@ import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.kafka.KafkaUtils
 import com.datastax.spark.connector.embedded.{Assertions, EmbeddedKafka}
 import com.datastax.spark.connector.streaming._
-import com.helenaedelson.blueprints.BlueprintEvents._
+import com.helenaedelson.blueprints.weather.api.WeatherApi
+import com.helenaedelson.blueprints.BlueprintEvents
 
 /**
  * NOTE: if [[NodeGuardian]] is ever put on an Akka router, multiple instances of the stream will
@@ -34,6 +35,8 @@ import com.helenaedelson.blueprints.BlueprintEvents._
  */
 class NodeGuardian(ssc: StreamingContext, kafka: EmbeddedKafka, settings: WeatherSettings)
   extends Actor with Assertions with ActorLogging {
+  import WeatherApi._
+  import BlueprintEvents._
   import Weather._
   import settings._
 
@@ -57,12 +60,12 @@ class NodeGuardian(ssc: StreamingContext, kafka: EmbeddedKafka, settings: Weathe
   }
 
   def receive: Actor.Receive = {
-    case TaskCompleted         => startStreaming()
-    case e: GetHiLow           => highLow(sender)
-    case GetWeatherStation     =>
-    case GetRawWeatherData     =>
-    case GetSkyConditionLookup =>
-    case PoisonPill            => gracefulShutdown()
+    case TaskCompleted          => startStreaming()
+    case e: GetHiLow            => highLow(sender)
+    case GetWeatherStation(sid) => weatherStation(sid, sender)
+    case GetRawWeatherData      =>
+    case GetSkyConditionLookup  =>
+    case PoisonPill             => gracefulShutdown()
   }
 
   // 2. save raw to cassandra
@@ -88,7 +91,7 @@ class NodeGuardian(ssc: StreamingContext, kafka: EmbeddedKafka, settings: Weathe
     highLow map (_ ! ComputeHiLow())
 
   /** Fill out the where clause and what needs to be passed in to request one. */
-  def weatherStation(requester: ActorRef): Unit = {
+  def weatherStation(sid: WeatherStationId, requester: ActorRef): Unit = {
      //Future(ssc.sc.cassandraTable[WeatherStation](CassandraKeyspace, "weather_station").where(...)) pipeTo requester
   }
 

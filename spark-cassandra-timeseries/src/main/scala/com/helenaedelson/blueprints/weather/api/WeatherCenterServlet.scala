@@ -27,14 +27,22 @@ import org.json4s.native.JsonParser
 */
 
 import akka.actor.{ActorRef, ActorSystem}
-import com.helenaedelson.blueprints.api._
+import com.helenaedelson.blueprints.weather.api.WeatherApi._
 
-class WeatherCenterServlet(api: WeatherDataActorApi) extends BlueprintsServlet {
+class WeatherCenterServlet(api: WeatherDataActorApi) extends TimeseriesServlet {
   import com.helenaedelson.blueprints.api._
 
-  get("/v1/high-low") {
-    val userId = userIdOrHalt(request)
-    api.hilow(userId).run.valueOrThrow
+  /** Sample: /v1/weather/climatology/10023?dayofyear=92 */
+  get("/v1/weather/climatology/high-low/:zipcode") {
+    val zipcode = zipcodeParam(params) getOrElse halt(status = 400, body = "No Zipcode was provided")
+    val dayofyear = dayOfYearParam(params)
+    api.hilow(GetHiLow(zipcode, dayofyear)).run.valueOrThrow
+  }
+
+  /** Sample: /v1/weather/stations/s/010010:99999 */
+  get("/v1/weather/stations") {
+    val stationId = stationIdOrHalt(request)
+    api.weatherStation(GetWeatherStation(stationId)).run.valueOrThrow
   }
 }
 
@@ -45,7 +53,6 @@ class WeatherDataActorApi(system: ActorSystem, guardian: ActorRef) {
   import akka.util.Timeout
   import com.helenaedelson.blueprints.api._
   import com.helenaedelson.blueprints.weather.Weather
-  import ApiData._
   import Weather._
   import system.dispatcher
 
@@ -53,9 +60,12 @@ class WeatherDataActorApi(system: ActorSystem, guardian: ActorRef) {
 
   /** Returns a summary of the weather for the next 3 days.
     * This includes high and low temperatures, a string text forecast and the conditions.
-    * @param uid the user id
+    * @param hiLow the paramaters for high-low forecast by location
     */
-  def hilow(uid: UID): FutureT[HiLowForecast] =
-    (guardian ? uid).mapTo[HiLowForecast].eitherT
+  def hilow(hiLow: GetHiLow): FutureT[HiLowForecast] =
+    (guardian ? hiLow).mapTo[HiLowForecast].eitherT
 
+
+  def weatherStation(station: GetWeatherStation): FutureT[WeatherStation] =
+    (guardian ? station).mapTo[WeatherStation].eitherT
 }

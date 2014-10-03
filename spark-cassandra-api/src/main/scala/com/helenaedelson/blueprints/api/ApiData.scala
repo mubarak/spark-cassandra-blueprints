@@ -11,7 +11,7 @@ object ApiData {
 
     import scalaz._
 
-    val HttpHeader = "X-BLUEPRINT-ID"
+    val HttpHeader = "X-BLUEPRINTS-ID"
 
     def apply(value: String): Validation[String, UID] =
       if (regex.pattern.matcher(value).matches) Success(new UID(value.toLowerCase))
@@ -22,4 +22,5 @@ object ApiData {
 
     private val regex = """[0-9a-f]{32}""".r
   }
+
 }
