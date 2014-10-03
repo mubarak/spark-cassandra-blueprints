@@ -1,4 +1,4 @@
-package com.helenaedelson.campaign
+package com.helenaedelson.blueprints.campaign
 
 import akka.actor.Actor
 import org.apache.spark.Logging

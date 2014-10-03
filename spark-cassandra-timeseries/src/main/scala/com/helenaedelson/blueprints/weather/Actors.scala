@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.helenaedelson.weather
+package com.helenaedelson.blueprints.weather
 
 import java.util.Properties
 
@@ -26,7 +26,7 @@ import kafka.server.KafkaConfig
 import kafka.serializer.{StringDecoder, StringEncoder}
 import com.datastax.spark.connector.embedded.Assertions
 import com.helenaedelson.blueprints.BlueprintEvents._
-import com.helenaedelson.weather.Weather._
+import com.helenaedelson.blueprints.weather.Weather._
 
 trait WeatherActor extends Actor with ActorLogging
 

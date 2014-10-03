@@ -1,11 +1,11 @@
-package com.helenaedelson.weather.api
+package com.helenaedelson.blueprints.weather.api
 
 import java.util.UUID
 
 import org.json4s._
 
 object WeatherCenterJson {
-  import com.helenaedelson.weather.Weather._
+  import com.helenaedelson.blueprints.weather.Weather._
 
   lazy val formats: Formats => Formats =
     _ + uuidSerializer + hints

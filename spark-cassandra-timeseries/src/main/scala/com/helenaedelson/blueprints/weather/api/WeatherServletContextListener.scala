@@ -1,10 +1,10 @@
-package com.helenaedelson.weather.api
+package com.helenaedelson.blueprints.weather.api
 
 import javax.servlet.{ServletContextEvent, ServletContextListener}
 
 import scala.util.control.NonFatal
 import org.scalatra.servlet.ServletApiImplicits
-import com.helenaedelson.weather.TimeseriesBlueprint
+import com.helenaedelson.blueprints.weather.TimeseriesBlueprint
 
 class WeatherServletContextListener extends ServletContextListener with ServletApiImplicits with TimeseriesBlueprint {
 

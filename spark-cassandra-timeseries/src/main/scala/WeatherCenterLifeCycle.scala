@@ -17,8 +17,8 @@ import javax.servlet.ServletContext
 
 import akka.actor.Props
 import com.helenaedelson.blueprints.api.BlueprintsLifeCycle
-import com.helenaedelson.weather.{WeatherSettings, NodeGuardian}
-import com.helenaedelson.weather.api.{WeatherDataActorApi, WeatherCenterServlet}
+import com.helenaedelson.blueprints.weather.{WeatherSettings, NodeGuardian}
+import com.helenaedelson.blueprints.weather.api.{WeatherDataActorApi, WeatherCenterServlet}
 
 /** For running from Tomcat. */
 class WeatherCenterLifeCycle extends BlueprintsLifeCycle {

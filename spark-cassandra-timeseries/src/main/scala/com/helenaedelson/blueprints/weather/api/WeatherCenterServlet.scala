@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.helenaedelson.weather.api
+package com.helenaedelson.blueprints.weather.api
 
 /* not using yet
 import scalaz.contrib.std.scalaFuture._
@@ -44,7 +44,7 @@ class WeatherDataActorApi(system: ActorSystem, guardian: ActorRef) {
   import akka.pattern.ask
   import akka.util.Timeout
   import com.helenaedelson.blueprints.api._
-  import com.helenaedelson.weather.Weather
+  import com.helenaedelson.blueprints.weather.Weather
   import ApiData._
   import Weather._
   import system.dispatcher

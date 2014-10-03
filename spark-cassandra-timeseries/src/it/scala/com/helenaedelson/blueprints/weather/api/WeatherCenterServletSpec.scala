@@ -15,21 +15,20 @@
 * limitations under the License.
 */
 
-package com.helenaedelson.weather.api
+package com.helenaedelson.blueprints.weather.api
 
-import org.json4s._
 import org.json4s.Extraction._
+import org.json4s._
 import org.json4s.native.JsonMethods._
 import org.json4s.native.JsonParser
-import org.scalatra.test.scalatest._
 import org.scalatest.WordSpecLike
-import com.helenaedelson.weather.TimeseriesBlueprint
-import com.helenaedelson.weather.Weather
+import org.scalatra.test.scalatest._
+import com.helenaedelson.blueprints.weather.TimeseriesBlueprint
 
 class WeatherCenterServletSpec extends ScalatraSuite with WordSpecLike
   with TimeseriesBlueprint with TimeseriesFixture {
-  import Weather._
-  import com.helenaedelson.weather._
+  import com.helenaedelson.blueprints.weather.Weather._
+  import com.helenaedelson.blueprints.weather._
 
   val api = new WeatherDataActorApi(system, guardian)
   

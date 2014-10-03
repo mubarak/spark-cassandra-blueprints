@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.helenaedelson.weather
+package com.helenaedelson.blueprints.weather
 
 import akka.actor.{PoisonPill, ActorSystem, Props}
 import com.typesafe.config.Config
@@ -24,7 +24,7 @@ import com.helenaedelson.blueprints.{Settings, StreamingBlueprint}
 /** For running WeatherCenter from command line or IDE. */
 object WeatherCenter extends TimeseriesBlueprint
 
-/** Used to run [[WeatherCenter]] and [[com.helenaedelson.weather.api.WeatherServletContextListener]] */
+/** Used to run [[WeatherCenter]] and [[com.helenaedelson.blueprints.weather.api.WeatherServletContextListener]] */
 trait TimeseriesBlueprint extends StreamingBlueprint {
 
   override val settings = new WeatherSettings()

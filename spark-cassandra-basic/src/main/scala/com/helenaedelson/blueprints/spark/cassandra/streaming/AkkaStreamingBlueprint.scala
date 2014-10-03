@@ -13,19 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.helenaedelson.spark.cassandra.streaming
+package com.helenaedelson.blueprints.spark.cassandra.streaming
 
-import scala.collection.immutable
-import scala.concurrent.duration._
 import akka.actor._
-import org.apache.spark.SparkEnv
-import org.apache.spark.streaming.{Milliseconds, StreamingContext}
 import com.datastax.spark.connector.cql.CassandraConnector
 import com.datastax.spark.connector.embedded._
 import com.datastax.spark.connector.streaming.StreamingEvent._
 import com.datastax.spark.connector.streaming.TypedStreamingActor
 import com.datastax.spark.connector.util.Logging
 import com.helenaedelson.blueprints.{Settings, StreamingBlueprint}
+import org.apache.spark.SparkEnv
+import org.apache.spark.streaming.{Milliseconds, StreamingContext}
+
+import scala.collection.immutable
+import scala.concurrent.duration._
 
 /**
  * This demo can run against a single node, local or remote.

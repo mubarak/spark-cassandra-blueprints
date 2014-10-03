@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.helenaedelson
+package com.helenaedelson.blueprints
 
 import org.json4s._
-import com.helenaedelson.weather.api.WeatherCenterJson
+import com.helenaedelson.blueprints.weather.api.WeatherCenterJson
 
 package object weather {
 

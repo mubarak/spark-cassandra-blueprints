@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.helenaedelson.spark.cassandra.basic
+package com.helenaedelson.blueprints.spark.cassandra.basic
 
 import org.apache.spark.SparkContext._
 import com.datastax.spark.connector.cql.CassandraConnector

@@ -46,7 +46,6 @@ CREATE TABLE raw_weather_data (
    PRIMARY KEY ((weather_station), year, month, day, hour)
 ) WITH CLUSTERING ORDER BY (year DESC, month DESC, day DESC, hour DESC);
 
-
 /*
 Quick access lookup table for sky_condition. Useful for potential analytics.
 Just in case you want to know what an okta is, here is the wikipedia page:

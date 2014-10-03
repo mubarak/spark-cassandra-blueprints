@@ -1,4 +1,4 @@
-package com.helenaedelson.campaign
+package com.helenaedelson.blueprints.campaign
 
 import scala.concurrent.duration._
 import scala.util.Try

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.helenaedelson.weather
+package com.helenaedelson.blueprints.weather
 
 import scala.concurrent.duration._
 import akka.actor._
