@@ -75,6 +75,8 @@ class NodeGuardian(ssc: StreamingContext, kafka: EmbeddedKafka, settings: Weathe
       .map (RawWeatherData(_))
       .saveToCassandra(CassandraKeyspace, CassandraTableRaw) // can also create a new table and specify columns: SomeColumns("key", "value")
 
+    ssc.checkpoint(SparkCheckpointDir)
+
     ssc.start()
 
     highLow = Some(context.actorOf(Props(new StreamingHighLowActor(ssc, settings)), "high-low"))

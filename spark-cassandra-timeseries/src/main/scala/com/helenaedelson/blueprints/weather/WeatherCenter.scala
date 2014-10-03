@@ -74,5 +74,6 @@ final class WeatherSettings(conf: Option[Config] = None) extends Settings(conf) 
   val KafkaTopicAnalyzed = timeseries.getString("kafka.topic.analyzed")
   val KafkaBatchSendSize = timeseries.getInt("kafka.batch.send.size")
 
+  val SparkCheckpointDir = timeseries.getString("spark.checkpoint.dir")
   val RawDataFile = timeseries.getString("raw.data.file")
 }
