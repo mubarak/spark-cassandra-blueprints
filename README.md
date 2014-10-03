@@ -12,9 +12,9 @@ We will be building and running with SBT
 
 ### Clone the repo and build the code
 
-```git clone https://github.com/helena/spark-cassandra-blueprints.git```
-```cd spark-cassandra-blueprints```
-```sbt compile```
+    git clone https://github.com/helena/spark-cassandra-blueprints.git
+    cd spark-cassandra-blueprints
+    sbt compile
 
 [SBT Docs](http://www.scala-sbt.org/0.13/docs/index.html)
 
