@@ -81,7 +81,7 @@ class HighLowActor(ssc: StreamingContext, settings: WeatherSettings) extends Wea
 
   /**
    * IMPLEMENT ME - for a given weather station:
-   * Hi-Low temperature average and cumulative rainfall for weather station 
+   * Hi-Low temperature average and cumulative rainfall for weather station
    */
   def compute(zip: Int, doy: Int, requester: ActorRef): Unit = {
 
