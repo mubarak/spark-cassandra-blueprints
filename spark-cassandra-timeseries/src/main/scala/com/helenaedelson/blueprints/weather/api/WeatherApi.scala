@@ -1,5 +1,7 @@
 package com.helenaedelson.blueprints.weather.api
 
+import org.joda.time.{DateTime, DateTimeZone}
+
 object WeatherApi {
   import com.helenaedelson.blueprints.weather.Weather._
 
@@ -44,7 +46,10 @@ import scalaz._
   case class GetRawWeatherData(perPage: Int) extends DataRequest
   case object GetSkyConditionLookup extends DataRequest
   case class GetHiLow(zipcode: Int, dayOfYear: Int) extends DataRequest
-
+  object GetHiLow {
+    def apply(zip: Int, doy: Option[Int] = None): GetHiLow =
+      GetHiLow(zip, doy getOrElse new DateTime(DateTimeZone.UTC).dayOfYear().get())
+  }
   /**
    * TODO: what type of data params do we want in order to request this?
    */

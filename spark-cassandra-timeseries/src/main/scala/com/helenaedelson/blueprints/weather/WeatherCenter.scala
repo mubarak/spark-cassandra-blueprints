@@ -21,7 +21,7 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
 import com.datastax.spark.connector.embedded.EmbeddedKafka
 import com.helenaedelson.blueprints.{Settings, StreamingBlueprint}
 
-/** For running WeatherCenter from command line or IDE. */
+/** Runnable: for running WeatherCenter from command line or IDE. */
 object WeatherCenter extends TimeseriesBlueprint
 
 /** Used to run [[WeatherCenter]] and [[com.helenaedelson.blueprints.weather.api.WeatherServletContextListener]] */

@@ -17,5 +17,4 @@ project/plugins/project/
 .worksheet
 .idea
 .idea_modules
-/tmp
-spark-cassandra-timeseries/tmp/
+*/tmp

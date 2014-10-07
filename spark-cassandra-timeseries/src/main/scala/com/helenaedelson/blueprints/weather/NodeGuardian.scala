@@ -60,12 +60,12 @@ class NodeGuardian(ssc: StreamingContext, kafka: EmbeddedKafka, settings: Weathe
   }
 
   def receive: Actor.Receive = {
-    case TaskCompleted          => startStreaming()
-    case e: GetHiLow            => highLow(sender)
-    case GetWeatherStation(sid) => weatherStation(sid, sender)
-    case GetRawWeatherData      =>
-    case GetSkyConditionLookup  =>
-    case PoisonPill             => gracefulShutdown()
+    case TaskCompleted                => startStreaming()
+    case e: GetHiLow                  => highLow map (_ forward e)
+    case GetWeatherStation(sid)       => weatherStation(sid, sender)
+    case GetRawWeatherData            =>
+    case GetSkyConditionLookup        =>
+    case PoisonPill                   => gracefulShutdown()
   }
 
   // 2. save raw to cassandra
@@ -82,13 +82,12 @@ class NodeGuardian(ssc: StreamingContext, kafka: EmbeddedKafka, settings: Weathe
 
     ssc.start()
 
-    highLow = Some(context.actorOf(Props(new StreamingHighLowActor(ssc, settings)), "high-low"))
-    // for now:
-    highLow map ( _ ! ComputeHiLow())
-  }
+    ssc.awaitTermination()
 
-  def highLow(requester: ActorRef): Unit =
-    highLow map (_ ! ComputeHiLow())
+    highLow = Some(context.actorOf(Props(new HighLowActor(ssc, settings)), "high-low"))
+    // for now call this directly until hooked up:
+    highLow map (_ ! GetHiLow(10024))
+  }
 
   /** Fill out the where clause and what needs to be passed in to request one. */
   def weatherStation(sid: WeatherStationId, requester: ActorRef): Unit = {

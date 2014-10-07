@@ -59,6 +59,7 @@ class RawDataActor(val kafkaConfig: KafkaConfig, ssc: StreamingContext, settings
     case e =>
   }
 
+  // TODO start but don't wait until done. go right back
   def publish(data: RDD[String]): Unit = {
     log.info(s"Batch sending raw data to kafka")
     batchSend(KafkaTopicRaw, KafkaGroupId, KafkaBatchSendSize, lines.toLocalIterator.toSeq)
@@ -68,33 +69,27 @@ class RawDataActor(val kafkaConfig: KafkaConfig, ssc: StreamingContext, settings
 }
 
 /** 3. reads raw from kafka stream, processes, stores in cassandra. */
-class StreamingHighLowActor(ssc: StreamingContext, settings: WeatherSettings) extends WeatherActor with Assertions {
+class HighLowActor(ssc: StreamingContext, settings: WeatherSettings) extends WeatherActor with Assertions {
 
   import com.datastax.spark.connector.streaming._
   import WeatherApi._
   import settings._
 
   def receive : Actor.Receive = {
-    case ComputeHiLow() => compute(sender)
+    case GetHiLow(zip, doy) => compute(zip, doy, sender)
   }
 
   /**
-   * IMPLEMENT ME!
-   * 4. Calculate a high low temp for some window and store in cassandra - create a new table for the data ;)
-   * 5. As part of a weather api, incoming REST requests can ask for high low temps
+   * IMPLEMENT ME - for a given weather station:
+   * Hi-Low temperature average and cumulative rainfall for weather station 
    */
-  def compute(requestor: ActorRef): Unit = {
+  def compute(zip: Int, doy: Int, requester: ActorRef): Unit = {
 
-    /** NOTE: I'm adding a CassandraInputDStream in the next week to the connector ;) WIP started.
-      *
-      * Returns an iterator that contains all of the elements in this RDD.
-      * The iterator will consume as much memory as the largest partition in this RDD */
+    /* The iterator will consume as much memory as the largest partition in this RDD */
     ssc.cassandraTable[RawWeatherData](CassandraKeyspace, CassandraTableRaw)
       .toLocalIterator.foreach(row => log.info(s"Read from Cassandra [$row]"))
 
     /*
-    Task: what would the actual spark query by for some kind of temperature hi-low?
-
     While you're here, try playing around with select and where:
     ssc.cassandraTable[RawWeatherData](CassandraKeyspace, CassandraTableRaw)
       .select(...column names)
