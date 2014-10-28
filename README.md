@@ -1,5 +1,6 @@
 # Spark Cassandra Blueprints
 Templates for getting started or doing quick prototypes, building Scala applications with Spark and Cassandra. 
+This is a little outdated, please see https://github.com/killrweather/killrweather.
 
 ## Environment Pre-Requisites
 If you already use Scala skip the SBT step. Similarly, if you already can spin up Cassandra locally, skip that step. 
